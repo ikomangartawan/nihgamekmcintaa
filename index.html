@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Galaxy Shooter</title>
 
 <style>
@@ -11,6 +12,7 @@ overflow:hidden;
 background:black;
 font-family:Arial;
 color:white;
+touch-action:none;
 }
 
 canvas{
@@ -27,7 +29,7 @@ text-align:center;
 
 button{
 padding:15px 30px;
-font-size:20px;
+font-size:18px;
 border:none;
 border-radius:10px;
 background:#00d9ff;
@@ -40,7 +42,7 @@ margin-top:20px;
 position:absolute;
 top:10px;
 left:10px;
-font-size:20px;
+font-size:18px;
 display:none;
 }
 
@@ -60,7 +62,7 @@ Life : <span id="life">3</span>
 </div>
 
 <div id="dead" style="display:none;">
-<h1>YAA MATI KAMUU NUBB 😆</h1>
+<h1>MATI NUBB 😆</h1>
 <button onclick="restartGame()">MAIN LAGI</button>
 </div>
 
@@ -146,14 +148,27 @@ canvas.addEventListener("mousemove",e=>{
 spaceship.x=e.clientX
 })
 
-canvas.addEventListener("click",()=>{
+canvas.addEventListener("click",shoot)
+
+// TOUCH CONTROL (HP)
+
+canvas.addEventListener("touchmove",e=>{
+
+let touch=e.touches[0]
+spaceship.x=touch.clientX
+
+})
+
+canvas.addEventListener("touchstart",shoot)
+
+function shoot(){
 
 bullets.push({
 x:spaceship.x,
 y:spaceship.y
 })
 
-})
+}
 
 function drawStars(){
 
