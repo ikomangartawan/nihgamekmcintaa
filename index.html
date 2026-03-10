@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Galaxy Shooter</title>
+
+<style>
+
+body{
+margin:0;
+overflow:hidden;
+background:black;
+font-family:Arial;
+color:white;
+}
+
+canvas{
+display:none;
+}
+
+#menu,#dead{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+text-align:center;
+}
+
+button{
+padding:15px 30px;
+font-size:20px;
+border:none;
+border-radius:10px;
+background:#00d9ff;
+color:white;
+cursor:pointer;
+margin-top:20px;
+}
+
+#hud{
+position:absolute;
+top:10px;
+left:10px;
+font-size:20px;
+display:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="menu">
+<h1>🚀 GALAXY SHOOTER</h1>
+<button onclick="startGame()">START GAME</button>
+</div>
+
+<div id="hud">
+Score : <span id="score">0</span> |
+Life : <span id="life">3</span>
+</div>
+
+<div id="dead" style="display:none;">
+<h1>YAA MATI KAMUU NUBB 😆</h1>
+<button onclick="restartGame()">MAIN LAGI</button>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+
+const canvas=document.getElementById("gameCanvas")
+const ctx=canvas.getContext("2d")
+
+canvas.width=window.innerWidth
+canvas.height=window.innerHeight
+
+let score,life,rapidFire,gameRunning
+
+let stars=[]
+let bullets=[]
+let enemies=[]
+let powerups=[]
+let boss=null
+
+let spaceshipImg=new Image()
+spaceshipImg.src="https://cdn-icons-png.flaticon.com/512/3212/3212608.png"
+
+let alienImg=new Image()
+alienImg.src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png"
+
+let bossImg=new Image()
+bossImg.src="https://cdn-icons-png.flaticon.com/512/616/616408.png"
+
+let spaceship={
+x:canvas.width/2,
+y:canvas.height-120
+}
+
+function init(){
+
+score=0
+life=3
+rapidFire=false
+gameRunning=true
+
+bullets=[]
+enemies=[]
+powerups=[]
+boss=null
+
+document.getElementById("score").innerText=score
+document.getElementById("life").innerText=life
+
+}
+
+for(let i=0;i<120;i++){
+
+stars.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+size:Math.random()*2,
+speed:1+Math.random()*2
+})
+
+}
+
+function startGame(){
+
+document.getElementById("menu").style.display="none"
+document.getElementById("dead").style.display="none"
+document.getElementById("hud").style.display="block"
+
+canvas.style.display="block"
+
+init()
+
+gameLoop()
+
+}
+
+function restartGame(){
+startGame()
+}
+
+canvas.addEventListener("mousemove",e=>{
+spaceship.x=e.clientX
+})
+
+canvas.addEventListener("click",()=>{
+
+bullets.push({
+x:spaceship.x,
+y:spaceship.y
+})
+
+})
+
+function drawStars(){
+
+ctx.fillStyle="white"
+
+stars.forEach(s=>{
+
+s.y+=s.speed
+
+if(s.y>canvas.height){
+s.y=0
+s.x=Math.random()*canvas.width
+}
+
+ctx.fillRect(s.x,s.y,s.size,s.size)
+
+})
+
+}
+
+function drawSpaceship(){
+
+ctx.drawImage(spaceshipImg,spaceship.x-35,spaceship.y-20,70,70)
+
+ctx.fillStyle="orange"
+
+ctx.beginPath()
+ctx.moveTo(spaceship.x-10,spaceship.y+30)
+ctx.lineTo(spaceship.x,spaceship.y+60+Math.random()*10)
+ctx.lineTo(spaceship.x+10,spaceship.y+30)
+ctx.fill()
+
+}
+
+function drawBullets(){
+
+ctx.fillStyle="cyan"
+
+bullets.forEach(b=>{
+
+b.y-= rapidFire ? 16 : 10
+
+ctx.fillRect(b.x-2,b.y,4,15)
+
+})
+
+}
+
+function spawnEnemy(){
+
+enemies.push({
+
+x:Math.random()*canvas.width,
+y:-40,
+speed:2+Math.random()*2
+
+})
+
+}
+
+setInterval(()=>{
+
+if(gameRunning && !boss){
+spawnEnemy()
+}
+
+},1200)
+
+function drawEnemies(){
+
+enemies.forEach(e=>{
+
+e.y+=e.speed
+
+ctx.drawImage(alienImg,e.x,e.y,50,50)
+
+})
+
+}
+
+function spawnPowerup(){
+
+powerups.push({
+
+x:Math.random()*canvas.width,
+y:-40,
+type:Math.floor(Math.random()*3)
+
+})
+
+}
+
+setInterval(()=>{
+
+if(gameRunning){
+if(Math.random()<0.4) spawnPowerup()
+}
+
+},4000)
+
+function drawPowerups(){
+
+powerups.forEach(p=>{
+
+p.y+=2
+
+ctx.fillStyle=["yellow","red","cyan"][p.type]
+
+ctx.beginPath()
+ctx.arc(p.x,p.y,12,0,Math.PI*2)
+ctx.fill()
+
+})
+
+}
+
+function spawnBoss(){
+
+boss={
+x:canvas.width/2-100,
+y:50,
+life:50
+}
+
+}
+
+function drawBoss(){
+
+if(!boss) return
+
+ctx.drawImage(bossImg,boss.x,boss.y,200,200)
+
+ctx.fillStyle="red"
+ctx.fillRect(boss.x,boss.y-10,boss.life*3,5)
+
+}
+
+function collision(){
+
+bullets.forEach((b,bi)=>{
+
+enemies.forEach((e,ei)=>{
+
+if(b.x>e.x && b.x<e.x+50 && b.y>e.y && b.y<e.y+50){
+
+bullets.splice(bi,1)
+enemies.splice(ei,1)
+
+score+=10
+document.getElementById("score").innerText=score
+
+}
+
+})
+
+if(boss){
+
+if(b.x>boss.x && b.x<boss.x+200 && b.y>boss.y && b.y<boss.y+200){
+
+bullets.splice(bi,1)
+boss.life--
+
+if(boss.life<=0){
+boss=null
+score+=500
+}
+
+}
+
+}
+
+})
+
+}
+
+function powerupHit(){
+
+powerups.forEach((p,i)=>{
+
+if(spaceship.x>p.x-20 && spaceship.x<p.x+20 && spaceship.y>p.y-20 && spaceship.y<p.y+20){
+
+if(p.type===0) life++
+if(p.type===1) rapidFire=true
+if(p.type===2) enemies=[]
+
+document.getElementById("life").innerText=life
+
+powerups.splice(i,1)
+
+setTimeout(()=>rapidFire=false,5000)
+
+}
+
+})
+
+}
+
+function playerHit(){
+
+enemies.forEach((e,i)=>{
+
+if(e.y+40>spaceship.y){
+
+life--
+
+document.getElementById("life").innerText=life
+
+enemies.splice(i,1)
+
+if(life<=0){
+
+gameRunning=false
+
+document.getElementById("dead").style.display="block"
+
+}
+
+}
+
+})
+
+}
+
+function gameLoop(){
+
+if(!gameRunning) return
+
+ctx.clearRect(0,0,canvas.width,canvas.height)
+
+drawStars()
+drawSpaceship()
+drawBullets()
+drawEnemies()
+drawPowerups()
+drawBoss()
+
+collision()
+playerHit()
+powerupHit()
+
+if(score>200 && !boss){
+spawnBoss()
+}
+
+requestAnimationFrame(gameLoop)
+
+}
+
+</script>
+
+</body>
+</html>
